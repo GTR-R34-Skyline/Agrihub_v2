@@ -7,42 +7,42 @@ import { cn } from "@/lib/utils";
 const advisors = [
   {
     id: "1",
-    name: "Dr. Elena Reyes",
+    name: "Dr. Anita Deshmukh",
     specialization: ["Rice Cultivation", "Pest Management"],
     experience: 15,
     rating: 4.9,
     consultations: 342,
-    hourlyRate: 500,
+    hourlyRate: 800,
     avatar: "👩‍🔬",
   },
   {
     id: "2",
-    name: "Engr. Marco Villanueva",
+    name: "Er. Vikram Singh",
     specialization: ["Irrigation Systems", "Farm Automation"],
     experience: 12,
     rating: 4.8,
     consultations: 256,
-    hourlyRate: 600,
+    hourlyRate: 1000,
     avatar: "👨‍🔧",
   },
   {
     id: "3",
-    name: "Dr. Sofia Tan",
+    name: "Dr. Kavitha Nair",
     specialization: ["Organic Farming", "Soil Health"],
     experience: 10,
     rating: 4.9,
     consultations: 198,
-    hourlyRate: 550,
+    hourlyRate: 900,
     avatar: "👩‍🌾",
   },
   {
     id: "4",
-    name: "Prof. Ramon Cruz",
+    name: "Prof. Raghunath Iyer",
     specialization: ["Livestock Management", "Veterinary"],
     experience: 20,
     rating: 4.7,
     consultations: 412,
-    hourlyRate: 700,
+    hourlyRate: 1200,
     avatar: "👨‍⚕️",
   },
 ];
@@ -131,7 +131,7 @@ const Advisory = () => {
                   {/* Actions */}
                   <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
                     <div>
-                      <span className="text-2xl font-bold text-primary">₱{advisor.hourlyRate}</span>
+                      <span className="text-2xl font-bold text-primary">₹{advisor.hourlyRate}</span>
                       <span className="text-sm text-muted-foreground">/hour</span>
                     </div>
                     <div className="flex gap-2">

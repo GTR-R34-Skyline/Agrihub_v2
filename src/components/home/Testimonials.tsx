@@ -3,21 +3,21 @@ import { cn } from "@/lib/utils";
 
 const testimonials = [
   {
-    quote: "Agrihub transformed how I sell my produce. I now reach buyers across the country and get fair prices for my crops.",
-    author: "Maria Santos",
-    role: "Rice Farmer, Nueva Ecija",
+    quote: "Agrihub transformed how I sell my produce. I now reach buyers across India and get fair prices for my crops.",
+    author: "Ramesh Patel",
+    role: "Rice Farmer, Punjab",
     rating: 5,
   },
   {
     quote: "The crop diagnostics feature saved my entire tomato harvest. The AI detected blight early and recommended the perfect treatment.",
-    author: "John Dela Cruz",
-    role: "Vegetable Farmer, Benguet",
+    author: "Suresh Reddy",
+    role: "Vegetable Farmer, Andhra Pradesh",
     rating: 5,
   },
   {
     quote: "As a buyer, I love the verified seller system. I know exactly where my products come from and can trust the quality.",
-    author: "Sarah Chen",
-    role: "Restaurant Owner, Manila",
+    author: "Priya Sharma",
+    role: "Restaurant Owner, Mumbai",
     rating: 5,
   },
 ];

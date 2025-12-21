@@ -7,9 +7,9 @@ import { cn } from "@/lib/utils";
 const posts = [
   {
     id: "1",
-    author: "Maria Santos",
+    author: "Lakshmi Devi",
     avatar: "👩‍🌾",
-    title: "Best practices for organic rice farming in wet season",
+    title: "Best practices for organic rice farming in Kharif season",
     content: "I've been experimenting with SRI (System of Rice Intensification) methods this season and the results are amazing! Here are my top tips for fellow rice farmers...",
     category: "Tips & Tricks",
     likes: 128,
@@ -18,10 +18,10 @@ const posts = [
   },
   {
     id: "2",
-    author: "Juan Dela Cruz",
+    author: "Venkat Rao",
     avatar: "👨‍🌾",
     title: "How I increased my tomato yield by 40%",
-    content: "After attending the Agrihub advisory session with Dr. Reyes, I implemented drip irrigation and proper pruning techniques. The difference is incredible!",
+    content: "After attending the Agrihub advisory session with Dr. Deshmukh, I implemented drip irrigation and proper pruning techniques. The difference is incredible!",
     category: "Success Stories",
     likes: 256,
     comments: 89,
@@ -29,7 +29,7 @@ const posts = [
   },
   {
     id: "3",
-    author: "Elena Villanueva",
+    author: "Dr. Meera Krishnan",
     avatar: "👩‍🔬",
     title: "Understanding soil pH levels for different crops",
     content: "Many farmers overlook the importance of soil pH. Here's a comprehensive guide on testing and adjusting your soil's acidity for optimal crop growth...",
@@ -40,10 +40,10 @@ const posts = [
   },
   {
     id: "4",
-    author: "Pedro Farm",
+    author: "Kisaan Farms",
     avatar: "🌾",
     title: "Looking for buyers: Fresh harvest coming next week!",
-    content: "We have 500kg of premium organic rice ready for harvest next Monday. Looking for direct buyers. Location: Nueva Ecija. DM for pricing!",
+    content: "We have 500kg of premium organic Basmati rice ready for harvest next Monday. Looking for direct buyers. Location: Punjab. DM for pricing!",
     category: "Marketplace",
     likes: 45,
     comments: 23,
@@ -176,7 +176,7 @@ const Community = () => {
                 <div className="rounded-2xl border border-border bg-card p-6">
                   <h3 className="font-display text-lg font-semibold">Trending Topics</h3>
                   <div className="mt-4 space-y-3">
-                    {["#RiceFarming", "#OrganicAgriculture", "#WetSeason2024", "#CropPrices", "#FarmTech"].map((topic) => (
+                    {["#KharifSeason", "#OrganicFarming", "#MSP2024", "#CropPrices", "#FarmTech"].map((topic) => (
                       <div key={topic} className="flex items-center justify-between text-sm">
                         <span className="font-medium text-primary hover:underline cursor-pointer">{topic}</span>
                         <span className="text-muted-foreground">125 posts</span>
@@ -190,9 +190,9 @@ const Community = () => {
                   <h3 className="font-display text-lg font-semibold">Top Contributors</h3>
                   <div className="mt-4 space-y-4">
                     {[
-                      { name: "Maria Santos", posts: 45, avatar: "👩‍🌾" },
-                      { name: "Dr. Elena Reyes", posts: 38, avatar: "👩‍🔬" },
-                      { name: "Juan Dela Cruz", posts: 32, avatar: "👨‍🌾" },
+                      { name: "Lakshmi Devi", posts: 45, avatar: "👩‍🌾" },
+                      { name: "Dr. Anita Deshmukh", posts: 38, avatar: "👩‍🔬" },
+                      { name: "Venkat Rao", posts: 32, avatar: "👨‍🌾" },
                     ].map((member) => (
                       <div key={member.name} className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-lg">

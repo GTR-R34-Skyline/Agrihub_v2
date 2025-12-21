@@ -5,26 +5,26 @@ import { cn } from "@/lib/utils";
 
 const founders = [
   {
-    name: "Dr. Isabel Fernandez",
+    name: "M. Shashank",
     role: "CEO & Co-Founder",
-    bio: "Former agricultural economist with 15 years of experience in rural development. Passionate about bridging technology and traditional farming.",
-    avatar: "👩‍💼",
+    bio: "Visionary leader with deep expertise in agricultural technology and rural development. Passionate about empowering Indian farmers through innovation.",
+    avatar: "👨‍💼",
     linkedin: "#",
     twitter: "#",
   },
   {
-    name: "Engr. Miguel Santos",
+    name: "K. Vishva",
     role: "CTO & Co-Founder",
-    bio: "Full-stack developer and AI specialist. Built enterprise solutions for Fortune 500 companies before dedicating his skills to agritech.",
+    bio: "Full-stack developer and AI specialist. Built enterprise solutions for leading tech companies before dedicating skills to revolutionizing agritech in India.",
     avatar: "👨‍💻",
     linkedin: "#",
     twitter: "#",
   },
   {
-    name: "Maria Reyes",
+    name: "Dr. S. Poorani",
     role: "COO & Co-Founder",
-    bio: "Third-generation farmer turned entrepreneur. Combines deep agricultural knowledge with modern business practices.",
-    avatar: "👩‍🌾",
+    bio: "Agricultural scientist with extensive research experience. Combines deep domain knowledge with modern business practices to drive sustainable farming.",
+    avatar: "👩‍🔬",
     linkedin: "#",
     twitter: "#",
   },
@@ -176,8 +176,8 @@ const Founders = () => {
               {[
                 { value: "2023", label: "Founded" },
                 { value: "10K+", label: "Farmers" },
-                { value: "25+", label: "Provinces" },
-                { value: "$2M+", label: "Transactions" },
+                { value: "28+", label: "States" },
+                { value: "₹15Cr+", label: "Transactions" },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <div className="font-display text-3xl font-bold text-primary-foreground md:text-4xl">
