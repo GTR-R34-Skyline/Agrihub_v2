@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Search, SlidersHorizontal, Grid3X3, List, Star } from "lucide-react";
+import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 // Comprehensive Indian agricultural products
 const mockProducts = [
@@ -348,6 +352,21 @@ const Marketplace = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const { addItem } = useCart();
+
+  const handleAddToCart = (product: any) => {
+    addItem({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      unit: product.unit,
+      image: product.image,
+      seller: product.seller,
+      location: product.location,
+      isOrganic: product.isOrganic,
+    });
+    toast.success(`${product.title} added to cart`);
+  };
 
   const filteredProducts = mockProducts.filter((product) => {
     const matchesCategory = !selectedCategory || product.category === selectedCategory;
@@ -356,7 +375,7 @@ const Marketplace = () => {
   });
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-gradient-alluvial">
       <Navbar />
       <main className="flex-1">
         {/* Header */}
@@ -458,15 +477,16 @@ const Marketplace = () => {
               )}
             >
               {filteredProducts.map((product, index) => (
-                <div
+                <motion.div
                   key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
                   className={cn(
                     "group rounded-2xl border border-border bg-card overflow-hidden transition-all duration-300",
                     "hover:border-primary/30 hover:shadow-lg hover:-translate-y-1",
-                    "animate-fade-up opacity-0",
                     viewMode === "list" && "flex"
                   )}
-                  style={{ animationDelay: `${index * 0.03}s`, animationFillMode: "forwards" }}
                 >
                   {/* Image */}
                   <div
@@ -486,9 +506,11 @@ const Marketplace = () => {
                   {/* Content */}
                   <div className="flex flex-1 flex-col p-4">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                        {product.title}
-                      </h3>
+                      <Link to={`/product/${product.id}`} className="flex-1">
+                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                          {product.title}
+                        </h3>
+                      </Link>
                       <div className="flex items-center gap-1 text-sm text-amber-500 flex-shrink-0">
                         <Star className="h-3 w-3 fill-current" />
                         {product.rating}
@@ -501,10 +523,10 @@ const Marketplace = () => {
                         ₹{product.price.toLocaleString('en-IN')}
                         <span className="text-sm font-normal text-muted-foreground">/{product.unit}</span>
                       </span>
-                      <Button size="sm">Add to Cart</Button>
+                      <Button size="sm" onClick={() => handleAddToCart(product)}>Add to Cart</Button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
 

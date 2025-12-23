@@ -9,6 +9,9 @@ import "@/lib/i18n";
 
 import Index from "./pages/Index";
 import Marketplace from "./pages/Marketplace";
+import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import Advisory from "./pages/Advisory";
 import Diagnostics from "./pages/Diagnostics";
 import Community from "./pages/Community";
@@ -30,6 +33,9 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
               <Route path="/advisory" element={<Advisory />} />
               <Route path="/diagnostics" element={<Diagnostics />} />
               <Route path="/community" element={<Community />} />
