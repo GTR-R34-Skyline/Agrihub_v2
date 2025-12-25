@@ -236,7 +236,7 @@ const FarmerDashboard = () => {
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex min-h-screen flex-col theme-laterite bg-laterite-bg">
+      <div className="flex min-h-screen flex-col theme-laterite" style={{ background: 'hsl(25 45% 95%)', color: 'hsl(25 40% 12%)' }}>
         <Navbar />
         <main className="flex-1 container py-8">
           <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -255,7 +255,7 @@ const FarmerDashboard = () => {
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
 
   return (
-    <div className="flex min-h-screen flex-col theme-laterite bg-laterite-bg pattern-grain">
+    <div className="flex min-h-screen flex-col theme-laterite pattern-grain" style={{ background: 'hsl(25 45% 95%)', color: 'hsl(25 40% 12%)' }}>
       <Navbar />
       <main className="flex-1">
         <div className="container py-8">
@@ -266,7 +266,7 @@ const FarmerDashboard = () => {
             className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
           >
             <div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-laterite-text">
+              <h1 className="font-display text-3xl md:text-4xl font-bold">
                 Farmer Dashboard
               </h1>
               <p className="text-muted-foreground mt-1">Manage your products and track orders</p>

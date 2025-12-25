@@ -183,7 +183,7 @@ const ProductDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-gradient-alluvial">
+      <div className="flex min-h-screen flex-col theme-black-soil" style={{ background: 'hsl(220 15% 12%)' }}>
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
           <div className="animate-pulse text-lg text-muted-foreground">Loading...</div>
@@ -195,7 +195,7 @@ const ProductDetail = () => {
 
   if (!product) {
     return (
-      <div className="flex min-h-screen flex-col bg-gradient-alluvial">
+      <div className="flex min-h-screen flex-col theme-black-soil" style={{ background: 'hsl(220 15% 12%)' }}>
         <Navbar />
         <main className="flex-1 flex items-center justify-center flex-col gap-4">
           <span className="text-6xl">🔍</span>
@@ -210,7 +210,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-alluvial">
+    <div className="flex min-h-screen flex-col theme-black-soil" style={{ background: 'hsl(220 15% 12%)' }}>
       <Navbar />
       <main className="flex-1">
         <div className="container py-8">

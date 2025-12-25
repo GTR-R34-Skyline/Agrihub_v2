@@ -18,18 +18,18 @@ const Cart = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen flex-col theme-black-soil bg-black-soil-bg">
+      <div className="flex min-h-screen flex-col theme-black-soil" style={{ background: 'hsl(220 15% 12%)', color: 'hsl(40 20% 95%)' }}>
         <Navbar />
         <main className="flex-1">
           <div className="container py-8">
-            <div className="h-12 bg-muted rounded animate-pulse w-48 mb-8" />
+            <div className="h-12 bg-muted/20 rounded animate-pulse w-48 mb-8" />
             <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-4">
                 <CartItemSkeleton />
                 <CartItemSkeleton />
                 <CartItemSkeleton />
               </div>
-              <div className="h-96 bg-muted rounded-2xl animate-pulse" />
+              <div className="h-96 bg-muted/20 rounded-2xl animate-pulse" />
             </div>
           </div>
         </main>
@@ -40,7 +40,7 @@ const Cart = () => {
 
   if (items.length === 0) {
     return (
-      <div className="flex min-h-screen flex-col theme-black-soil bg-black-soil-bg">
+      <div className="flex min-h-screen flex-col theme-black-soil" style={{ background: 'hsl(220 15% 12%)', color: 'hsl(40 20% 95%)' }}>
         <Navbar />
         <main className="flex-1 flex items-center justify-center">
           <motion.div
@@ -48,15 +48,15 @@ const Cart = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="mx-auto h-28 w-28 rounded-full bg-black-soil-surface flex items-center justify-center mb-6 shadow-lg">
-              <ShoppingCart className="h-14 w-14 text-black-soil-accent" />
+            <div className="mx-auto h-28 w-28 rounded-full bg-muted/20 flex items-center justify-center mb-6 shadow-lg">
+              <ShoppingCart className="h-14 w-14 text-amber-400" />
             </div>
-            <h1 className="font-display text-3xl font-bold mb-3 text-black-soil-text">Your cart is empty</h1>
+            <h1 className="font-display text-3xl font-bold mb-3">Your cart is empty</h1>
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
               Discover fresh produce directly from farmers across India. From Kashmir saffron to Kerala spices.
             </p>
             <Link to="/marketplace">
-              <Button size="lg" className="gap-2 bg-black-soil-accent hover:bg-black-soil-accent/90">
+              <Button size="lg" className="gap-2 bg-amber-500 hover:bg-amber-600 text-background">
                 <ArrowLeft className="h-4 w-4" />
                 Browse Marketplace
               </Button>
@@ -69,7 +69,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col theme-black-soil bg-black-soil-bg pattern-grain">
+    <div className="flex min-h-screen flex-col theme-black-soil pattern-grain" style={{ background: 'hsl(220 15% 12%)', color: 'hsl(40 20% 95%)' }}>
       <Navbar />
       <main className="flex-1">
         <div className="container py-8">
@@ -79,7 +79,7 @@ const Cart = () => {
             className="flex items-center justify-between mb-8"
           >
             <div>
-              <h1 className="font-display text-3xl md:text-4xl font-bold text-black-soil-text">Shopping Cart</h1>
+              <h1 className="font-display text-3xl md:text-4xl font-bold">Shopping Cart</h1>
               <p className="text-muted-foreground mt-1">{totalItems} items from verified farmers</p>
             </div>
             <Button 
@@ -102,7 +102,7 @@ const Cart = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="flex gap-4 p-5 rounded-2xl bg-black-soil-surface border border-border/20 shadow-lg hover:shadow-xl transition-all duration-300 group"
+                  className="flex gap-4 p-5 rounded-2xl bg-muted/10 border border-border/20 shadow-lg hover:shadow-xl transition-all duration-300 group"
                 >
                   <div className="h-28 w-28 rounded-xl bg-muted/20 flex items-center justify-center text-5xl flex-shrink-0 group-hover:scale-105 transition-transform">
                     {item.image}
@@ -110,7 +110,7 @@ const Cart = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h3 className="font-semibold text-lg text-black-soil-text truncate">{item.title}</h3>
+                        <h3 className="font-semibold text-lg truncate">{item.title}</h3>
                         <p className="text-sm text-muted-foreground">{item.seller}</p>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                           <MapPin className="h-3 w-3" />
@@ -142,7 +142,7 @@ const Cart = () => {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <span className="font-bold text-xl text-black-soil-accent">
+                          <span className="font-bold text-xl text-amber-400">
                             ₹{(item.price * item.quantity).toLocaleString("en-IN")}
                           </span>
                           <p className="text-xs text-muted-foreground">
@@ -169,8 +169,8 @@ const Cart = () => {
               transition={{ delay: 0.2 }}
               className="lg:sticky lg:top-24 h-fit"
             >
-              <div className="rounded-3xl bg-gradient-to-b from-black-soil-surface to-black-soil-bg border border-border/20 p-6 shadow-2xl">
-                <h2 className="font-display text-xl font-bold mb-6 text-black-soil-text">Order Summary</h2>
+              <div className="rounded-3xl bg-gradient-to-b from-muted/20 to-muted/10 border border-border/20 p-6 shadow-2xl">
+                <h2 className="font-display text-xl font-bold mb-6">Order Summary</h2>
                 
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-muted-foreground">
@@ -192,9 +192,9 @@ const Cart = () => {
                     <span>₹{tax.toLocaleString("en-IN")}</span>
                   </div>
                   <div className="h-px bg-border/30" />
-                  <div className="flex justify-between text-xl font-bold text-black-soil-text">
+                  <div className="flex justify-between text-xl font-bold">
                     <span>Total</span>
-                    <span className="text-black-soil-accent">
+                    <span className="text-amber-400">
                       ₹{grandTotal.toLocaleString("en-IN")}
                     </span>
                   </div>
@@ -208,7 +208,7 @@ const Cart = () => {
                 )}
 
                 <Link to="/checkout" className="block">
-                  <Button size="lg" className="w-full gap-2 bg-black-soil-accent hover:bg-black-soil-accent/90 text-background font-semibold">
+                  <Button size="lg" className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-background font-semibold">
                     Proceed to Checkout
                     <ArrowRight className="h-4 w-4" />
                   </Button>

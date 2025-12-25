@@ -2,9 +2,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import "@/lib/i18n";
 
 import Index from "./pages/Index";
@@ -18,9 +19,82 @@ import Community from "./pages/Community";
 import Founders from "./pages/Founders";
 import Auth from "./pages/Auth";
 import Account from "./pages/Account";
+import FarmerDashboard from "./pages/FarmerDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+// Role-protected route component
+const RoleProtectedRoute = ({ 
+  children, 
+  allowedRoles 
+}: { 
+  children: React.ReactNode; 
+  allowedRoles: string[];
+}) => {
+  const { user, roles, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  const hasAllowedRole = roles.some(role => allowedRoles.includes(role));
+  
+  if (!hasAllowedRole) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// App content with realtime notifications
+const AppContent = () => {
+  useRealtimeNotifications();
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/marketplace" element={<Marketplace />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/advisory" element={<Advisory />} />
+        <Route path="/diagnostics" element={<Diagnostics />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/founders" element={<Founders />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/account" element={<Account />} />
+        <Route 
+          path="/farmer-dashboard" 
+          element={
+            <RoleProtectedRoute allowedRoles={["farmer", "admin"]}>
+              <FarmerDashboard />
+            </RoleProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin-dashboard" 
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboard />
+            </RoleProtectedRoute>
+          } 
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -29,22 +103,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/advisory" element={<Advisory />} />
-              <Route path="/diagnostics" element={<Diagnostics />} />
-              <Route path="/community" element={<Community />} />
-              <Route path="/founders" element={<Founders />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/account" element={<Account />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <AppContent />
         </TooltipProvider>
       </CartProvider>
     </AuthProvider>

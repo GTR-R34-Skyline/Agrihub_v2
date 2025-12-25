@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Leaf, ShoppingCart, User, Bell, LogOut } from "lucide-react";
+import { Menu, X, Leaf, ShoppingCart, User, Bell, LogOut, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NAV_LINKS, APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import {
   DropdownMenu,
@@ -18,9 +18,88 @@ import {
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
   const location = useLocation();
-  const { totalItems } = useCart();
   const { user, profile, signOut } = useAuth();
+
+  // Fetch live cart count from backend
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      if (!user) {
+        // Try localStorage for guests
+        try {
+          const stored = localStorage.getItem("agrihub_cart");
+          if (stored) {
+            const items = JSON.parse(stored);
+            const count = items.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
+            setCartCount(count);
+          } else {
+            setCartCount(0);
+          }
+        } catch {
+          setCartCount(0);
+        }
+        setIsLoadingCart(false);
+        return;
+      }
+
+      setIsLoadingCart(true);
+      const { data, error } = await supabase
+        .from("cart_items")
+        .select("quantity")
+        .eq("user_id", user.id);
+
+      if (!error && data) {
+        const total = data.reduce((sum, item) => sum + item.quantity, 0);
+        setCartCount(total);
+      } else {
+        setCartCount(0);
+      }
+      setIsLoadingCart(false);
+    };
+
+    fetchCartCount();
+
+    // Subscribe to cart changes for logged-in users
+    if (user) {
+      const channel = supabase
+        .channel("navbar-cart")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "cart_items", filter: `user_id=eq.${user.id}` },
+          () => {
+            fetchCartCount();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+
+    // Listen for localStorage changes for guests
+    const handleStorageChange = () => {
+      if (!user) {
+        try {
+          const stored = localStorage.getItem("agrihub_cart");
+          if (stored) {
+            const items = JSON.parse(stored);
+            const count = items.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
+            setCartCount(count);
+          } else {
+            setCartCount(0);
+          }
+        } catch {
+          setCartCount(0);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [user]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -70,17 +149,28 @@ export function Navbar() {
           <Link to="/cart">
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
-              <AnimatePresence>
-                {totalItems > 0 && (
+              <AnimatePresence mode="wait">
+                {isLoadingCart ? (
                   <motion.span
+                    key="loading"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-muted"
+                  >
+                    <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                  </motion.span>
+                ) : cartCount > 0 ? (
+                  <motion.span
+                    key="count"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                     className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-secondary-foreground shadow-lg"
                   >
-                    {totalItems > 99 ? "99+" : totalItems}
+                    {cartCount > 99 ? "99+" : cartCount}
                   </motion.span>
-                )}
+                ) : null}
               </AnimatePresence>
             </Button>
           </Link>
@@ -140,11 +230,15 @@ export function Navbar() {
           <Link to="/cart">
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
-              {totalItems > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-secondary-foreground">
-                  {totalItems}
+              {isLoadingCart ? (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-muted">
+                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
                 </span>
-              )}
+              ) : cartCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-secondary-foreground">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              ) : null}
             </Button>
           </Link>
           <button

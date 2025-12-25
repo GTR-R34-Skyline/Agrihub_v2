@@ -134,7 +134,7 @@ const Checkout = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col theme-red-soil bg-red-soil-bg pattern-grain">
+    <div className="flex min-h-screen flex-col theme-red-soil pattern-grain" style={{ background: 'hsl(15 40% 94%)', color: 'hsl(15 45% 15%)' }}>
       <Navbar />
       <main className="flex-1">
         <div className="container py-8 max-w-4xl">

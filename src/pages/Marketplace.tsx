@@ -375,7 +375,7 @@ const Marketplace = () => {
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-alluvial">
+    <div className="flex min-h-screen flex-col theme-alluvial bg-background bg-alluvial-gradient">
       <Navbar />
       <main className="flex-1">
         {/* Header */}

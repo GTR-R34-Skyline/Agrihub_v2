@@ -65,7 +65,7 @@ const itemVariants = {
 
 const Founders = () => {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-forest">
+    <div className="flex min-h-screen flex-col theme-laterite bg-background" style={{ background: 'hsl(25 45% 95%)' }}>
       <Navbar />
       <main className="flex-1">
         {/* Header */}

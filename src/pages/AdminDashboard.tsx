@@ -117,7 +117,7 @@ const AdminDashboard = () => {
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex min-h-screen flex-col theme-forest" style={{ background: 'hsl(150 25% 96%)', color: 'hsl(150 30% 10%)' }}>
         <Navbar />
         <main className="flex-1 container py-8">
           <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -145,7 +145,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col theme-forest" style={{ background: 'hsl(150 25% 96%)', color: 'hsl(150 30% 10%)' }}>
       <Navbar />
       <main className="flex-1">
         <div className="container py-8">
