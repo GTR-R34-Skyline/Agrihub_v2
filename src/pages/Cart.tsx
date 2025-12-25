@@ -6,7 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { Badge } from "@/components/ui/badge";
-import { CartItemSkeleton } from "@/components/ui/skeleton-loader";
+import { CartItemSkeleton } from "@/components/ui/dashboard-skeletons";
 
 const Cart = () => {
   const { items, removeItem, updateQuantity, totalItems, totalPrice, clearCart, isLoading } = useCart();

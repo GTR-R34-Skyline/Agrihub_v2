@@ -27,7 +27,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { DashboardCardSkeleton } from "@/components/ui/skeleton-loader";
+import { DashboardCardSkeleton } from "@/components/ui/dashboard-skeletons";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Database } from "@/integrations/supabase/types";
 
