@@ -1,6 +1,14 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Play, Leaf, TrendingUp, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+// Smooth scroll to Features section
+const scrollToFeatures = () => {
+  const featuresSection = document.getElementById("features");
+  if (featuresSection) {
+    featuresSection.scrollIntoView({ behavior: "smooth" });
+  }
+};
 import heroImage from "@/assets/hero-indian-farm.jpg";
 
 export function Hero() {
@@ -49,7 +57,13 @@ export function Hero() {
               <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>
-          <Button variant="outline" size="xl" className="gap-2 bg-background/50 backdrop-blur-sm border-foreground/20 hover:bg-background/70">
+          <Button 
+            variant="outline" 
+            size="xl" 
+            className="gap-2 bg-background/50 backdrop-blur-sm border-foreground/20 hover:bg-background/70 cursor-pointer"
+            onClick={scrollToFeatures}
+            aria-label="Learn more about AgriHub features"
+          >
             <Play className="h-5 w-5" />
             Watch How It Works
           </Button>

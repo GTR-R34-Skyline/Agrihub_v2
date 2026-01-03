@@ -13,7 +13,8 @@ import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database['public']['Enums']['app_role'];
 
-const roles: { value: AppRole; label: string; icon: string; description: string }[] = [
+// Role options for signup form
+const roleOptions: { value: AppRole; label: string; icon: string; description: string }[] = [
   { value: "farmer", label: "Farmer", icon: "👨‍🌾", description: "Sell your produce and get expert advice" },
   { value: "buyer", label: "Buyer", icon: "🛒", description: "Purchase fresh agricultural products" },
   { value: "agronomist", label: "Agronomist", icon: "👩‍🔬", description: "Provide expert advisory services" },
@@ -32,15 +33,24 @@ const Auth = () => {
     location: "",
   });
 
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, roles: userRoles } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Role-based redirect helper
+  const getRedirectPath = (userRoles: string[]) => {
+    if (userRoles.includes("admin")) return "/admin-dashboard";
+    if (userRoles.includes("farmer")) return "/farmer-dashboard";
+    return "/";
+  };
+
+  // Redirect authenticated users to their appropriate dashboard
   useEffect(() => {
-    if (user) {
-      navigate("/");
+    if (user && userRoles.length > 0) {
+      const redirectPath = getRedirectPath(userRoles);
+      navigate(redirectPath);
     }
-  }, [user, navigate]);
+  }, [user, userRoles, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +67,7 @@ const Auth = () => {
           });
         } else {
           toast({ title: "Welcome back!", description: "You've successfully logged in." });
-          navigate("/");
+          // Redirect will happen via useEffect when roles are loaded
         }
       } else {
         const { error } = await signUp(formData.email, formData.password, formData.fullName, selectedRole);
@@ -69,7 +79,9 @@ const Auth = () => {
           });
         } else {
           toast({ title: "Account created!", description: "Welcome to AgriHub." });
-          navigate("/");
+          // Redirect based on selected role after signup
+          const redirectPath = getRedirectPath([selectedRole]);
+          navigate(redirectPath);
         }
       }
     } catch (err) {
@@ -121,7 +133,7 @@ const Auth = () => {
                 <div className="space-y-3">
                   <Label>I am a</Label>
                   <div className="grid grid-cols-3 gap-3">
-                    {roles.map((role) => (
+                    {roleOptions.map((role) => (
                       <motion.button
                         key={role.value}
                         type="button"
@@ -236,13 +248,21 @@ const Auth = () => {
 
             {isLogin && (
               <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" className="rounded border-border" />
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" className="rounded border-border cursor-pointer" />
                   <span className="text-muted-foreground">Remember me</span>
                 </label>
-                <a href="#" className="font-medium text-primary hover:underline">
+                {/* Forgot password - shows toast with instructions since password reset flow requires additional setup */}
+                <button
+                  type="button"
+                  onClick={() => toast({
+                    title: "Password Reset",
+                    description: "Please contact support@agrihub.com to reset your password.",
+                  })}
+                  className="font-medium text-primary hover:underline cursor-pointer"
+                >
                   Forgot password?
-                </a>
+                </button>
               </div>
             )}
 

@@ -18,17 +18,42 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               Empowering farmers and connecting agricultural communities with technology-driven solutions for a sustainable future.
             </p>
+            {/* Social media links - placeholder URLs until official accounts are set up */}
             <div className="flex gap-4">
-              <a href="#" className="text-muted-foreground transition-colors hover:text-primary">
+              <a 
+                href="https://facebook.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground transition-colors hover:text-primary cursor-pointer"
+                aria-label="Follow us on Facebook"
+              >
                 <Facebook className="h-5 w-5" />
               </a>
-              <a href="#" className="text-muted-foreground transition-colors hover:text-primary">
+              <a 
+                href="https://twitter.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground transition-colors hover:text-primary cursor-pointer"
+                aria-label="Follow us on Twitter"
+              >
                 <Twitter className="h-5 w-5" />
               </a>
-              <a href="#" className="text-muted-foreground transition-colors hover:text-primary">
+              <a 
+                href="https://instagram.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground transition-colors hover:text-primary cursor-pointer"
+                aria-label="Follow us on Instagram"
+              >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a href="#" className="text-muted-foreground transition-colors hover:text-primary">
+              <a 
+                href="https://linkedin.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground transition-colors hover:text-primary cursor-pointer"
+                aria-label="Follow us on LinkedIn"
+              >
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>
@@ -45,14 +70,14 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Resources */}
+          {/* Resources - Links route to founders page with relevant anchors */}
           <div className="space-y-4">
             <h4 className="font-display text-sm font-semibold uppercase tracking-wider">Resources</h4>
             <ul className="space-y-3 text-sm">
-              <li><Link to="/founders" className="text-muted-foreground transition-colors hover:text-primary">About Us</Link></li>
-              <li><a href="#" className="text-muted-foreground transition-colors hover:text-primary">Help Center</a></li>
-              <li><a href="#" className="text-muted-foreground transition-colors hover:text-primary">Privacy Policy</a></li>
-              <li><a href="#" className="text-muted-foreground transition-colors hover:text-primary">Terms of Service</a></li>
+              <li><Link to="/founders" className="text-muted-foreground transition-colors hover:text-primary cursor-pointer">About Us</Link></li>
+              <li><Link to="/founders#contact" className="text-muted-foreground transition-colors hover:text-primary cursor-pointer">Help Center</Link></li>
+              <li><Link to="/founders#privacy" className="text-muted-foreground transition-colors hover:text-primary cursor-pointer">Privacy Policy</Link></li>
+              <li><Link to="/founders#terms" className="text-muted-foreground transition-colors hover:text-primary cursor-pointer">Terms of Service</Link></li>
             </ul>
           </div>
 
