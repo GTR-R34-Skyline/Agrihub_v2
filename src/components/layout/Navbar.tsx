@@ -194,7 +194,7 @@ export function Navbar() {
                 <DropdownMenuItem asChild>
                   <Link to="/account" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
-                    My Account
+                    Dashboard
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -261,21 +261,18 @@ export function Navbar() {
             className="border-t border-border lg:hidden overflow-hidden"
           >
             <nav className="container flex flex-col gap-2 py-4">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    "px-4 py-3 text-sm font-medium transition-colors rounded-lg",
-                    location.pathname === link.href
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <Link to="/marketplace" onClick={() => setIsOpen(false)} className="px-4 py-3 text-sm font-medium transition-colors rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+                Marketplace
+              </Link>
+              <Link to="/advisory" onClick={() => setIsOpen(false)} className="px-4 py-3 text-sm font-medium transition-colors rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+                Advisory
+              </Link>
+              <Link to="/account" onClick={() => setIsOpen(false)} className="px-4 py-3 text-sm font-medium transition-colors rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+                Dashboard
+              </Link>
+              <Link to="/community" onClick={() => setIsOpen(false)} className="px-4 py-3 text-sm font-medium transition-colors rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+                Community
+              </Link>
               
               <div className="flex items-center gap-2 px-4 py-2">
                 <LanguageToggle />
@@ -287,7 +284,7 @@ export function Navbar() {
                     <Link to="/account" onClick={() => setIsOpen(false)}>
                       <Button variant="outline" className="w-full gap-2">
                         <User className="h-4 w-4" />
-                        My Account
+                        Dashboard
                       </Button>
                     </Link>
                     <Button

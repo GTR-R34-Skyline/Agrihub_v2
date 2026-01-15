@@ -25,6 +25,8 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+import Forbidden from "./pages/Forbidden";
+
 // Role-protected route component
 const RoleProtectedRoute = ({ 
   children, 
@@ -50,7 +52,7 @@ const RoleProtectedRoute = ({
   const hasAllowedRole = roles.some(role => allowedRoles.includes(role));
   
   if (!hasAllowedRole) {
-    return <Navigate to="/" replace />;
+    return <Forbidden />;
   }
 
   return <>{children}</>;

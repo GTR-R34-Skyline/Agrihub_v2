@@ -537,6 +537,16 @@ const Marketplace = () => {
                 <p className="mt-2 text-muted-foreground">
                   Try adjusting your search or filter criteria.
                 </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-6"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory(null);
+                  }}
+                >
+                  Clear all filters
+                </Button>
               </div>
             )}
           </div>

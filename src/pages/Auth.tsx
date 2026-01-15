@@ -196,6 +196,7 @@ const Auth = () => {
                 <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   className="pl-10 pr-10"
@@ -203,6 +204,7 @@ const Auth = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   required
                   minLength={6}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                 />
                 <button
                   type="button"
