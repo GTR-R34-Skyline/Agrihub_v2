@@ -58,19 +58,66 @@ const AdminDashboard = () => {
     setIsLoading(true);
 
     try {
-      const [profilesRes, productsRes, ordersRes, categoriesRes] = await Promise.all([
-        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-        supabase.from('products').select('*').order('created_at', { ascending: false }),
-        supabase.from('orders').select('*').order('created_at', { ascending: false }),
-        supabase.from('categories').select('*').order('name'),
-      ]);
+      // Admin queries - RLS policies must grant admin access
+      // Profiles are publicly viewable (RLS: true for SELECT)
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, user_id, full_name, avatar_url, bio, phone, location, created_at, updated_at')
+        .order('created_at', { ascending: false });
 
-      if (profilesRes.data) setProfiles(profilesRes.data);
-      if (productsRes.data) setProducts(productsRes.data);
-      if (ordersRes.data) setOrders(ordersRes.data);
-      if (categoriesRes.data) setCategories(categoriesRes.data);
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        toast.error("Unable to load user profiles.");
+      } else {
+        setProfiles(profilesData || []);
+      }
+
+      // Products are publicly viewable (RLS: true for SELECT)
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (productsError) {
+        console.error('Error fetching products:', productsError);
+        toast.error("Unable to load products.");
+      } else {
+        setProducts(productsData || []);
+      }
+
+      // Orders - Admin needs proper RLS policy to view all orders
+      // If admin doesn't have access, show empty with message
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (ordersError) {
+        if (ordersError.code === '42501' || ordersError.message?.includes('policy')) {
+          console.warn('Admin does not have orders access policy');
+          toast.error("Admin order access policy not configured. Contact support.");
+        } else {
+          console.error('Error fetching orders:', ordersError);
+        }
+        setOrders([]);
+      } else {
+        setOrders(ordersData || []);
+      }
+
+      // Categories are publicly viewable (RLS: true for SELECT)
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+
+      if (categoriesError) {
+        console.error('Error fetching categories:', categoriesError);
+      } else {
+        setCategories(categoriesData || []);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
+      toast.error("An error occurred while loading admin data.");
     } finally {
       setIsLoading(false);
     }

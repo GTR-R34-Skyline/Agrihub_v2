@@ -80,35 +80,56 @@ const FarmerDashboard = () => {
     setIsLoading(true);
 
     try {
-      // Fetch farmer's products
-      const { data: productsData } = await supabase
+      // Fetch farmer's own products (RLS: seller_id = auth.uid())
+      const { data: productsData, error: productsError } = await supabase
         .from('products')
         .select('*')
         .eq('seller_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (productsData) setProducts(productsData);
+      if (productsError) {
+        console.error('Error fetching products:', productsError);
+        toast.error("Unable to load products. Please try again.");
+      } else {
+        setProducts(productsData || []);
+      }
 
-      // Fetch orders for farmer's products
-      const { data: ordersData } = await supabase
+      // Fetch orders for farmer's products (RLS: orders where seller has products)
+      // The RLS policy allows farmers to see orders containing their products
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (ordersData) setOrders(ordersData);
+      if (ordersError) {
+        // Handle permission error gracefully - farmer may not have orders yet
+        if (ordersError.code === '42501' || ordersError.message?.includes('policy')) {
+          console.log('No orders accessible yet');
+          setOrders([]);
+        } else {
+          console.error('Error fetching orders:', ordersError);
+        }
+      } else {
+        setOrders(ordersData || []);
+      }
 
-      // Fetch notifications
-      const { data: notificationsData } = await supabase
+      // Fetch notifications for logged-in user (RLS: user_id = auth.uid())
+      const { data: notificationsData, error: notificationsError } = await supabase
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (notificationsData) setNotifications(notificationsData);
+      if (notificationsError) {
+        console.error('Error fetching notifications:', notificationsError);
+      } else {
+        setNotifications(notificationsData || []);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
+      toast.error("An error occurred while loading your dashboard.");
     } finally {
       setIsLoading(false);
     }
