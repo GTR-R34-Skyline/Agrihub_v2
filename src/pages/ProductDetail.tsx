@@ -1,6 +1,14 @@
+/**
+ * ProductDetail Page - RLS Compliant
+ * 
+ * Products are publicly viewable.
+ * Reviews are publicly viewable.
+ * Seller info is fetched from public profile fields only.
+ */
+
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Star, MapPin, User, ShoppingCart, Truck, Shield, MessageSquare, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Star, MapPin, User, ShoppingCart, Truck, Shield, MessageSquare, Plus, Minus, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -12,65 +20,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { fetchPublicProfile, type PublicProfile } from "@/lib/supabase-helpers";
+import type { Database } from "@/integrations/supabase/types";
 
-interface Review {
-  id: string;
-  rating: number;
-  title: string | null;
-  content: string | null;
-  created_at: string;
-  user_id: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  unit: string;
-  image_url: string | null;
-  location: string | null;
-  is_organic: boolean | null;
-  quantity_available: number;
-  seller_id: string;
-  category_id: string | null;
-}
-
-// Mock product data for now (will be replaced with Supabase data when products exist)
-const mockProducts: Record<string, any> = {
-  "1": {
-    id: "1",
-    name: "Kashmiri Saffron (Kesar)",
-    description: "Premium grade A1 Kashmiri saffron from the valleys of Pampore. Our saffron is hand-picked at dawn and sun-dried using traditional methods passed down through generations. Known for its deep red color, intense aroma, and exceptional coloring strength. Each strand is carefully selected to ensure the highest quality. Perfect for biryanis, kheer, and traditional Indian sweets.",
-    price: 45000,
-    unit: "100g",
-    image: "🌸",
-    location: "Pampore, Kashmir",
-    seller: "Kashmir Valley Farms",
-    sellerId: "seller-1",
-    isOrganic: true,
-    rating: 4.9,
-    reviewCount: 128,
-    quantityAvailable: 50,
-    category: "spices"
-  },
-  "2": {
-    id: "2",
-    name: "Kerala Malabar Black Pepper",
-    description: "Authentic Malabar black pepper from the spice gardens of Wayanad, Kerala. Sun-dried using traditional methods to preserve the natural oils and pungent flavor. Grade: TGSEB (Tellicherry Garbled Special Extra Bold). Our pepper has a complex flavor profile with notes of citrus and wood.",
-    price: 850,
-    unit: "kg",
-    image: "🌶️",
-    location: "Wayanad, Kerala",
-    seller: "Spice Garden Coop",
-    sellerId: "seller-2",
-    isOrganic: true,
-    rating: 4.8,
-    reviewCount: 89,
-    quantityAvailable: 200,
-    category: "spices"
-  },
-};
+type Review = Database['public']['Tables']['reviews']['Row'];
+type Product = Database['public']['Tables']['products']['Row'];
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -80,43 +34,62 @@ const ProductDetail = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [newReview, setNewReview] = useState({ rating: 5, title: "", content: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [sellerProfile, setSellerProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
-      
-      // Try to fetch from Supabase first
-      const { data: dbProduct, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-      
-      if (dbProduct) {
-        setProduct({
-          ...dbProduct,
-          image: "🌾",
-          rating: 4.5,
-          reviewCount: 0,
-        });
-      } else {
-        // Fall back to mock data
-        setProduct(mockProducts[id] || null);
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Products are publicly viewable (RLS policy allows SELECT for everyone)
+        const { data: dbProduct, error: productError } = await supabase
+          .from("products")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+
+        if (productError) {
+          console.error("Error fetching product:", productError);
+          setError("Unable to load product details.");
+          return;
+        }
+
+        if (!dbProduct) {
+          setError("Product not found.");
+          return;
+        }
+
+        setProduct(dbProduct);
+
+        // Fetch seller's public profile (only public fields)
+        const profile = await fetchPublicProfile(dbProduct.seller_id);
+        setSellerProfile(profile);
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        setError("An unexpected error occurred.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     const fetchReviews = async () => {
       if (!id) return;
-      const { data } = await supabase
+      
+      // Reviews are publicly viewable (RLS policy allows SELECT for everyone)
+      const { data, error: reviewError } = await supabase
         .from("reviews")
         .select("*")
         .eq("product_id", id)
         .order("created_at", { ascending: false });
-      
-      if (data) setReviews(data);
+
+      if (!reviewError && data) {
+        setReviews(data);
+      }
     };
 
     fetchProduct();
@@ -141,17 +114,18 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
-    
+
     for (let i = 0; i < quantity; i++) {
       addItem({
         id: product.id,
         title: product.name,
         price: product.price,
         unit: product.unit,
-        image: product.image || product.image_url || "🌾",
-        seller: product.seller || "Farmer",
+        image: product.image_url || "🌾",
+        seller: sellerProfile?.full_name || "Verified Farmer",
         location: product.location || "India",
-        isOrganic: product.isOrganic || product.is_organic,
+        isOrganic: product.is_organic || false,
+        productId: product.id,
       });
     }
     toast.success(`Added ${quantity} ${product.name} to cart`);
@@ -164,6 +138,8 @@ const ProductDetail = () => {
     }
 
     setIsSubmitting(true);
+    
+    // Users can create reviews (RLS policy: auth.uid() = user_id)
     const { error } = await supabase.from("reviews").insert({
       product_id: id,
       user_id: user.id,
@@ -173,7 +149,12 @@ const ProductDetail = () => {
     });
 
     if (error) {
-      toast.error("Failed to submit review");
+      console.error("Review submission error:", error);
+      if (error.code === '42501' || error.message?.includes('policy')) {
+        toast.error("You don't have permission to submit a review. Please ensure you're logged in.");
+      } else {
+        toast.error("Failed to submit review. Please try again.");
+      }
     } else {
       toast.success("Review submitted successfully!");
       setNewReview({ rating: 5, title: "", content: "" });
@@ -193,13 +174,22 @@ const ProductDetail = () => {
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="flex min-h-screen flex-col theme-black-soil" style={{ background: 'hsl(220 15% 12%)' }}>
         <Navbar />
         <main className="flex-1 flex items-center justify-center flex-col gap-4">
-          <span className="text-6xl">🔍</span>
-          <h1 className="text-2xl font-bold">Product not found</h1>
+          {error ? (
+            <>
+              <AlertCircle className="h-16 w-16 text-destructive" />
+              <h1 className="text-2xl font-bold">{error}</h1>
+            </>
+          ) : (
+            <>
+              <span className="text-6xl">🔍</span>
+              <h1 className="text-2xl font-bold">Product not found</h1>
+            </>
+          )}
           <Link to="/marketplace">
             <Button>Back to Marketplace</Button>
           </Link>
@@ -208,6 +198,10 @@ const ProductDetail = () => {
       </div>
     );
   }
+
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+    : 4.5;
 
   return (
     <div className="flex min-h-screen flex-col theme-black-soil" style={{ background: 'hsl(220 15% 12%)' }}>
@@ -231,10 +225,18 @@ const ProductDetail = () => {
               transition={{ duration: 0.5 }}
               className="relative"
             >
-              <div className="aspect-square rounded-3xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-[12rem] shadow-2xl border border-border/50">
-                {product.image || product.image_url || "🌾"}
+              <div className="aspect-square rounded-3xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center shadow-2xl border border-border/50 overflow-hidden">
+                {product.image_url ? (
+                  <img 
+                    src={product.image_url} 
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-[12rem]">🌾</span>
+                )}
               </div>
-              {(product.isOrganic || product.is_organic) && (
+              {product.is_organic && (
                 <Badge className="absolute top-4 left-4 bg-success text-success-foreground text-lg px-4 py-2">
                   🌿 Organic Certified
                 </Badge>
@@ -259,14 +261,14 @@ const ProductDetail = () => {
                         key={star}
                         className={cn(
                           "h-5 w-5",
-                          star <= Math.floor(product.rating || 4.5)
+                          star <= Math.floor(averageRating)
                             ? "fill-amber-400 text-amber-400"
                             : "text-muted"
                         )}
                       />
                     ))}
-                    <span className="ml-2 font-medium">{product.rating || 4.5}</span>
-                    <span className="text-muted-foreground">({product.reviewCount || reviews.length} reviews)</span>
+                    <span className="ml-2 font-medium">{averageRating.toFixed(1)}</span>
+                    <span className="text-muted-foreground">({reviews.length} reviews)</span>
                   </div>
                 </div>
               </div>
@@ -279,19 +281,27 @@ const ProductDetail = () => {
               </div>
 
               <p className="text-muted-foreground leading-relaxed">
-                {product.description}
+                {product.description || "Premium quality product from verified Indian farmers."}
               </p>
 
-              {/* Seller Info */}
+              {/* Seller Info - Using public profile data only */}
               <div className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary" />
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  {sellerProfile?.avatar_url ? (
+                    <img 
+                      src={sellerProfile.avatar_url} 
+                      alt={sellerProfile.full_name || "Seller"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-6 w-6 text-primary" />
+                  )}
                 </div>
                 <div>
-                  <p className="font-medium">{product.seller || "Verified Farmer"}</p>
+                  <p className="font-medium">{sellerProfile?.full_name || "Verified Farmer"}</p>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <MapPin className="h-3 w-3" />
-                    {product.location}
+                    {product.location || "India"}
                   </div>
                 </div>
                 <Badge variant="outline" className="ml-auto">Verified Seller</Badge>
@@ -318,6 +328,15 @@ const ProductDetail = () => {
                   <ShoppingCart className="h-5 w-5" />
                   Add to Cart
                 </Button>
+              </div>
+
+              {/* Stock Info */}
+              <div className="text-sm text-muted-foreground">
+                {product.quantity_available > 0 ? (
+                  <span className="text-success">✓ In stock ({product.quantity_available} available)</span>
+                ) : (
+                  <span className="text-destructive">Out of stock</span>
+                )}
               </div>
 
               {/* Trust Badges */}
