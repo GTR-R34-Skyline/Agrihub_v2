@@ -56,9 +56,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     setIsLoading(true);
     try {
+      // Select only required columns for cart display
       const { data, error } = await supabase
         .from('cart_items')
-        .select('*')
+        .select('id, user_id, product_id, product_data, quantity')
         .eq('user_id', user.id);
 
       if (error) throw error;

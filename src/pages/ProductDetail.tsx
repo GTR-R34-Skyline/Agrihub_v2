@@ -23,18 +23,41 @@ import { cn } from "@/lib/utils";
 import { fetchPublicProfile, type PublicProfile } from "@/lib/supabase-helpers";
 import type { Database } from "@/integrations/supabase/types";
 
-type Review = Database['public']['Tables']['reviews']['Row'];
-type Product = Database['public']['Tables']['products']['Row'];
+// Minimal types for RLS-compliant queries
+interface ProductDetailData {
+  id: string;
+  seller_id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  unit: string;
+  image_url: string | null;
+  location: string | null;
+  is_organic: boolean | null;
+  quantity_available: number;
+  created_at: string;
+}
+
+interface ReviewData {
+  id: string;
+  product_id: string;
+  user_id: string;
+  rating: number;
+  title: string | null;
+  content: string | null;
+  created_at: string;
+  is_verified_purchase: boolean | null;
+}
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
   const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [newReview, setNewReview] = useState({ rating: 5, title: "", content: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductDetailData | null>(null);
   const [sellerProfile, setSellerProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,9 +70,10 @@ const ProductDetail = () => {
 
       try {
         // Products are publicly viewable (RLS policy allows SELECT for everyone)
+        // Select only required columns for product detail
         const { data: dbProduct, error: productError } = await supabase
           .from("products")
-          .select("*")
+          .select("id, seller_id, name, description, price, unit, image_url, location, is_organic, quantity_available, created_at")
           .eq("id", id)
           .maybeSingle();
 
@@ -81,9 +105,10 @@ const ProductDetail = () => {
       if (!id) return;
       
       // Reviews are publicly viewable (RLS policy allows SELECT for everyone)
+      // Select only required columns for reviews display
       const { data, error: reviewError } = await supabase
         .from("reviews")
-        .select("*")
+        .select("id, product_id, user_id, rating, title, content, created_at, is_verified_purchase")
         .eq("product_id", id)
         .order("created_at", { ascending: false });
 
@@ -102,7 +127,7 @@ const ProductDetail = () => {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "reviews", filter: `product_id=eq.${id}` },
         (payload) => {
-          setReviews((prev) => [payload.new as Review, ...prev]);
+          setReviews((prev) => [payload.new as ReviewData, ...prev]);
         }
       )
       .subscribe();

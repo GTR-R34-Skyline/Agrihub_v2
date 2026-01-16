@@ -34,19 +34,51 @@ import { DashboardCardSkeleton } from "@/components/ui/dashboard-skeletons";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Database } from "@/integrations/supabase/types";
 
-type Product = Database['public']['Tables']['products']['Row'];
-type Order = Database['public']['Tables']['orders']['Row'];
-type Notification = Database['public']['Tables']['notifications']['Row'];
+// Minimal types for RLS-compliant queries
+interface FarmerProduct {
+  id: string;
+  seller_id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  unit: string;
+  image_url: string | null;
+  location: string | null;
+  is_organic: boolean | null;
+  quantity_available: number;
+  is_featured: boolean | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface FarmerOrder {
+  id: string;
+  buyer_id: string;
+  status: Database['public']['Enums']['order_status'];
+  total_amount: number;
+  shipping_address: string | null;
+  created_at: string;
+}
+
+interface FarmerNotification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean | null;
+  created_at: string;
+}
 
 const FarmerDashboard = () => {
   const navigate = useNavigate();
   const { user, hasRole, isLoading: authLoading } = useAuth();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [products, setProducts] = useState<FarmerProduct[]>([]);
+  const [orders, setOrders] = useState<FarmerOrder[]>([]);
+  const [notifications, setNotifications] = useState<FarmerNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<FarmerProduct | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -81,9 +113,10 @@ const FarmerDashboard = () => {
 
     try {
       // Fetch farmer's own products (RLS: seller_id = auth.uid())
+      // Select only required columns for farmer's product management
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('*')
+        .select('id, seller_id, name, description, price, unit, image_url, location, is_organic, quantity_available, is_featured, created_at, updated_at')
         .eq('seller_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -96,9 +129,10 @@ const FarmerDashboard = () => {
 
       // Fetch orders for farmer's products (RLS: orders where seller has products)
       // The RLS policy allows farmers to see orders containing their products
+      // Select only required columns - RLS filters to orders containing farmer's products
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('*')
+        .select('id, buyer_id, status, total_amount, shipping_address, created_at')
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -115,9 +149,10 @@ const FarmerDashboard = () => {
       }
 
       // Fetch notifications for logged-in user (RLS: user_id = auth.uid())
+      // Select only required columns for notifications display
       const { data: notificationsData, error: notificationsError } = await supabase
         .from('notifications')
-        .select('*')
+        .select('id, user_id, type, title, message, is_read, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
@@ -145,7 +180,7 @@ const FarmerDashboard = () => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setNotifications(prev => [payload.new as Notification, ...prev].slice(0, 5));
+          setNotifications(prev => [payload.new as FarmerNotification, ...prev].slice(0, 5));
           toast.info((payload.new as Notification).title);
         }
       })
@@ -308,7 +343,7 @@ const FarmerDashboard = () => {
     }
   };
 
-  const startEdit = (product: Product) => {
+  const startEdit = (product: FarmerProduct) => {
     setProductForm({
       name: product.name,
       description: product.description || "",
