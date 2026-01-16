@@ -24,13 +24,26 @@ import { toast } from "sonner";
 import { fetchPublicProfiles, type PublicProfile } from "@/lib/supabase-helpers";
 import type { Database } from "@/integrations/supabase/types";
 
-type Product = Database['public']['Tables']['products']['Row'];
+// Minimal product type for marketplace display (RLS-compliant select)
+interface MarketplaceProduct {
+  id: string;
+  seller_id: string;
+  name: string;
+  price: number;
+  unit: string;
+  image_url: string | null;
+  location: string | null;
+  is_organic: boolean | null;
+  quantity_available: number;
+  category_id: string | null;
+  created_at: string;
+}
 
 const Marketplace = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<MarketplaceProduct[]>([]);
   const [sellerProfiles, setSellerProfiles] = useState<Map<string, PublicProfile>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,9 +59,10 @@ const Marketplace = () => {
       try {
         // Products are publicly viewable (RLS policy allows SELECT for everyone)
         // RLS will automatically filter equipment for buyers
+        // Select only required columns for marketplace display
         const { data, error: queryError } = await supabase
           .from('products')
-          .select('*')
+          .select('id, seller_id, name, price, unit, image_url, location, is_organic, quantity_available, category_id, created_at')
           .order('created_at', { ascending: false });
 
         if (queryError) {
@@ -94,7 +108,7 @@ const Marketplace = () => {
     };
   }, [user]);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: MarketplaceProduct) => {
     const sellerProfile = sellerProfiles.get(product.seller_id);
     addItem({
       id: product.id,

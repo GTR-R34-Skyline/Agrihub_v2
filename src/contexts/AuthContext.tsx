@@ -30,9 +30,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUserData = async (userId: string) => {
     try {
       // Fetch profile
+      // Select only required columns for user's own profile
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, user_id, full_name, avatar_url, phone, location, bio, created_at, updated_at')
         .eq('user_id', userId)
         .single();
       

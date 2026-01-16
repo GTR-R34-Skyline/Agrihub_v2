@@ -58,9 +58,10 @@ export function NotificationsDropdown() {
 
     const fetchNotifications = async () => {
       setIsLoading(true);
+      // Select only required columns for notifications display
       const { data, error } = await supabase
         .from("notifications")
-        .select("*")
+        .select("id, user_id, type, title, message, is_read, created_at, data")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20);

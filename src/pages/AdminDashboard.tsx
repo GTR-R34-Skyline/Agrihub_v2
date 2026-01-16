@@ -28,16 +28,38 @@ import { DashboardCardSkeleton } from "@/components/ui/dashboard-skeletons";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
-type Product = Database['public']['Tables']['products']['Row'];
-type Order = Database['public']['Tables']['orders']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
+
+// Minimal types for RLS-compliant queries
+interface AdminProduct {
+  id: string;
+  seller_id: string;
+  name: string;
+  price: number;
+  unit: string;
+  quantity_available: number;
+  is_organic: boolean | null;
+  is_featured: boolean | null;
+  created_at: string;
+  location?: string | null;
+}
+
+interface AdminOrder {
+  id: string;
+  buyer_id: string;
+  status: Database['public']['Enums']['order_status'];
+  total_amount: number;
+  shipping_address: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, hasRole, isLoading: authLoading } = useAuth();
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
@@ -73,9 +95,10 @@ const AdminDashboard = () => {
       }
 
       // Products are publicly viewable (RLS: true for SELECT)
+      // Select only required columns for admin products management
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('*')
+        .select('id, seller_id, name, price, unit, quantity_available, is_organic, is_featured, created_at')
         .order('created_at', { ascending: false });
 
       if (productsError) {
@@ -87,9 +110,10 @@ const AdminDashboard = () => {
 
       // Orders - Admin needs proper RLS policy to view all orders
       // If admin doesn't have access, show empty with message
+      // Admin can now view all orders (RLS policy added)
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('*')
+        .select('id, buyer_id, status, total_amount, shipping_address, created_at, updated_at')
         .order('created_at', { ascending: false });
 
       if (ordersError) {
@@ -105,9 +129,10 @@ const AdminDashboard = () => {
       }
 
       // Categories are publicly viewable (RLS: true for SELECT)
+      // Select only required columns for categories display
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('categories')
-        .select('*')
+        .select('id, name, slug, icon, description, created_at')
         .order('name');
 
       if (categoriesError) {
