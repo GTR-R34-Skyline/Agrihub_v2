@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      advisors: {
+        Row: {
+          bio: string | null
+          created_at: string
+          experience_years: number
+          hourly_rate: number
+          id: string
+          is_available: boolean
+          rating: number
+          specialization: string[]
+          total_consultations: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          experience_years?: number
+          hourly_rate?: number
+          id?: string
+          is_available?: boolean
+          rating?: number
+          specialization?: string[]
+          total_consultations?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          experience_years?: number
+          hourly_rate?: number
+          id?: string
+          is_available?: boolean
+          rating?: number
+          specialization?: string[]
+          total_consultations?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cart_items: {
         Row: {
           created_at: string
@@ -76,6 +118,42 @@ export type Database = {
           id?: string
           name?: string
           slug?: string
+        }
+        Relationships: []
+      }
+      crop_diagnostics: {
+        Row: {
+          created_at: string
+          crop_type: string
+          diagnosis_result: Json | null
+          farmer_id: string
+          id: string
+          image_url: string | null
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          crop_type: string
+          diagnosis_result?: Json | null
+          farmer_id: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          crop_type?: string
+          diagnosis_result?: Json | null
+          farmer_id?: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
