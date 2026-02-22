@@ -1,53 +1,73 @@
-import { Calendar, Clock, Star, Award, MessageCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Calendar, Clock, Star, Award, MessageCircle, AlertCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
-const advisors = [
-  {
-    id: "1",
-    name: "Dr. Anita Deshmukh",
-    specialization: ["Rice Cultivation", "Pest Management"],
-    experience: 15,
-    rating: 4.9,
-    consultations: 342,
-    hourlyRate: 800,
-    avatar: "👩‍🔬",
-  },
-  {
-    id: "2",
-    name: "Er. Vikram Singh",
-    specialization: ["Irrigation Systems", "Farm Automation"],
-    experience: 12,
-    rating: 4.8,
-    consultations: 256,
-    hourlyRate: 1000,
-    avatar: "👨‍🔧",
-  },
-  {
-    id: "3",
-    name: "Dr. Kavitha Nair",
-    specialization: ["Organic Farming", "Soil Health"],
-    experience: 10,
-    rating: 4.9,
-    consultations: 198,
-    hourlyRate: 900,
-    avatar: "👩‍🌾",
-  },
-  {
-    id: "4",
-    name: "Prof. Raghunath Iyer",
-    specialization: ["Livestock Management", "Veterinary"],
-    experience: 20,
-    rating: 4.7,
-    consultations: 412,
-    hourlyRate: 1200,
-    avatar: "👨‍⚕️",
-  },
-];
+interface Advisor {
+  id: string;
+  user_id: string;
+  specialization: string[];
+  experience_years: number;
+  hourly_rate: number;
+  rating: number;
+  total_consultations: number;
+  bio: string | null;
+  is_available: boolean;
+  full_name: string | null;
+  avatar_url: string | null;
+}
 
 const Advisory = () => {
+  const [advisors, setAdvisors] = useState<Advisor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAdvisors = async () => {
+      try {
+        // Fetch advisors with public profile data via separate query
+        const { data: advisorData, error: advisorError } = await supabase
+          .from('advisors')
+          .select('id, user_id, specialization, experience_years, hourly_rate, rating, total_consultations, bio, is_available')
+          .eq('is_available', true);
+
+        if (advisorError) throw advisorError;
+        if (!advisorData || advisorData.length === 0) {
+          setAdvisors([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch public profile info for these advisors
+        const userIds = advisorData.map(a => a.user_id);
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) ?? []);
+
+        const merged: Advisor[] = advisorData.map(a => ({
+          ...a,
+          full_name: profileMap.get(a.user_id)?.full_name ?? null,
+          avatar_url: profileMap.get(a.user_id)?.avatar_url ?? null,
+        }));
+
+        setAdvisors(merged);
+      } catch (err: any) {
+        console.error('Error fetching advisors:', err);
+        setError(err.message ?? 'Failed to load advisors');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdvisors();
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
@@ -76,78 +96,104 @@ const Advisory = () => {
           <div className="container">
             <div className="mb-8 flex items-center justify-between">
               <h2 className="font-display text-2xl font-bold">Available Experts</h2>
-              <Button variant="outline">Filter by Specialty</Button>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              {advisors.map((advisor, index) => (
-                <div
-                  key={advisor.id}
-                  className={cn(
-                    "group rounded-2xl border border-border bg-card p-6 transition-all duration-300",
-                    "hover:border-primary/30 hover:shadow-lg",
-                    "animate-fade-up opacity-0"
-                  )}
-                  style={{ animationDelay: `${index * 0.1}s`, animationFillMode: "forwards" }}
-                >
-                  <div className="flex gap-4">
-                    {/* Avatar */}
-                    <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-4xl">
-                      {advisor.avatar}
-                    </div>
+            {loading && (
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-pulse text-muted-foreground">Loading advisors...</div>
+              </div>
+            )}
 
-                    {/* Info */}
-                    <div className="flex-1">
-                      <h3 className="font-display text-xl font-semibold">{advisor.name}</h3>
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        {advisor.specialization.map((spec) => (
-                          <span
-                            key={spec}
-                            className="rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary"
-                          >
-                            {spec}
-                          </span>
-                        ))}
+            {error && (
+              <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 py-12 text-center">
+                <AlertCircle className="h-8 w-8 text-destructive" />
+                <p className="text-destructive">{error}</p>
+              </div>
+            )}
+
+            {!loading && !error && advisors.length === 0 && (
+              <div className="py-20 text-center text-muted-foreground">
+                No advisors available at the moment. Check back later!
+              </div>
+            )}
+
+            {!loading && !error && advisors.length > 0 && (
+              <div className="grid gap-6 md:grid-cols-2">
+                {advisors.map((advisor, index) => (
+                  <div
+                    key={advisor.id}
+                    className={cn(
+                      "group rounded-2xl border border-border bg-card p-6 transition-all duration-300",
+                      "hover:border-primary/30 hover:shadow-lg",
+                      "animate-fade-up opacity-0"
+                    )}
+                    style={{ animationDelay: `${index * 0.1}s`, animationFillMode: "forwards" }}
+                  >
+                    <div className="flex gap-4">
+                      {/* Avatar */}
+                      <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-4xl">
+                        {advisor.avatar_url ? (
+                          <img src={advisor.avatar_url} alt={advisor.full_name ?? "Advisor"} className="h-full w-full rounded-xl object-cover" />
+                        ) : (
+                          "👩‍🔬"
+                        )}
                       </div>
 
-                      {/* Stats */}
-                      <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Award className="h-4 w-4 text-primary" />
-                          {advisor.experience} years exp.
+                      {/* Info */}
+                      <div className="flex-1">
+                        <h3 className="font-display text-xl font-semibold">
+                          {advisor.full_name ?? "Unnamed Advisor"}
+                        </h3>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          {advisor.specialization.map((spec) => (
+                            <span
+                              key={spec}
+                              className="rounded-full bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary"
+                            >
+                              {spec}
+                            </span>
+                          ))}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-warning text-warning" />
-                          {advisor.rating}
+
+                        {/* Stats */}
+                        <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Award className="h-4 w-4 text-primary" />
+                            {advisor.experience_years} years exp.
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 fill-warning text-warning" />
+                            {Number(advisor.rating).toFixed(1)}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MessageCircle className="h-4 w-4" />
+                            {advisor.total_consultations} consultations
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <MessageCircle className="h-4 w-4" />
-                          {advisor.consultations} consultations
-                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
+                      <div>
+                        <span className="text-2xl font-bold text-primary">₹{Number(advisor.hourly_rate)}</span>
+                        <span className="text-sm text-muted-foreground">/hour</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="gap-2">
+                          <Calendar className="h-4 w-4" />
+                          Schedule
+                        </Button>
+                        <Button size="sm" className="gap-2">
+                          <Clock className="h-4 w-4" />
+                          Book Now
+                        </Button>
                       </div>
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
-                    <div>
-                      <span className="text-2xl font-bold text-primary">₹{advisor.hourlyRate}</span>
-                      <span className="text-sm text-muted-foreground">/hour</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Schedule
-                      </Button>
-                      <Button size="sm" className="gap-2">
-                        <Clock className="h-4 w-4" />
-                        Book Now
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

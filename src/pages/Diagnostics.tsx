@@ -1,9 +1,13 @@
-import { useState } from "react";
-import { Upload, Camera, Leaf, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Upload, Camera, Leaf, AlertTriangle, CheckCircle, Info, AlertCircle, History } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const crops = [
   { id: "rice", name: "Rice", icon: "🌾" },
@@ -14,9 +18,57 @@ const crops = [
   { id: "banana", name: "Banana", icon: "🍌" },
 ];
 
+interface DiagnosticRecord {
+  id: string;
+  crop_type: string;
+  status: string;
+  image_url: string | null;
+  diagnosis_result: any;
+  notes: string | null;
+  created_at: string;
+}
+
 const Diagnostics = () => {
+  const { user, roles, isLoading: authLoading } = useAuth();
   const [selectedCrop, setSelectedCrop] = useState<string | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [history, setHistory] = useState<DiagnosticRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isBuyer = roles.length > 0 && roles.every(r => r === 'buyer');
+  const isFarmer = roles.includes('farmer');
+  const isAgronomist = roles.includes('agronomist');
+
+  useEffect(() => {
+    if (!user) return;
+    fetchHistory();
+  }, [user]);
+
+  // Buyers must never access diagnostics
+  if (!authLoading && user && isBuyer) {
+    return <Navigate to="/forbidden" replace />;
+  }
+
+  const fetchHistory = async () => {
+    if (!user) return;
+    setHistoryLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('crop_diagnostics')
+        .select('id, crop_type, status, image_url, diagnosis_result, notes, created_at')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setHistory(data ?? []);
+    } catch (err: any) {
+      console.error('Error fetching diagnostics history:', err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -28,15 +80,79 @@ const Diagnostics = () => {
     }
   };
 
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) handleFile(files[0]);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) handleFile(files[0]);
+  };
+
+  const handleFile = async (file: File) => {
+    if (!user || !selectedCrop) {
+      toast.error("Please select a crop type first.");
+      return;
+    }
+    if (!isFarmer) {
+      toast.error("Only farmers can submit diagnostics.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File must be under 10MB.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Upload image
+      const filePath = `${user.id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('diagnostic-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('diagnostic-images')
+        .getPublicUrl(filePath);
+
+      // Insert diagnostic record
+      const { error: insertError } = await supabase
+        .from('crop_diagnostics')
+        .insert({
+          farmer_id: user.id,
+          crop_type: selectedCrop,
+          image_url: urlData.publicUrl,
+          status: 'pending',
+        });
+
+      if (insertError) throw insertError;
+
+      toast.success("Diagnostic submitted! You'll receive results shortly.");
+      setSelectedCrop(null);
+      fetchHistory();
+    } catch (err: any) {
+      console.error('Error submitting diagnostic:', err);
+      toast.error(err.message ?? "Failed to submit diagnostic.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
         {/* Header */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-info/5 via-background to-success/5 py-16 md:py-24">
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5 py-16 md:py-24">
           <div className="container">
             <div className="mx-auto max-w-2xl text-center">
-              <span className="inline-block rounded-full bg-info/10 px-4 py-1.5 text-sm font-medium text-info">
+              <span className="inline-block rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
                 AI-Powered
               </span>
               <h1 className="mt-4 font-display text-3xl font-bold md:text-4xl lg:text-5xl">
@@ -44,119 +160,176 @@ const Diagnostics = () => {
                 <span className="text-gradient">Diagnostics</span>
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                Upload a photo of your crop and let our AI detect potential diseases, 
-                pests, and nutrient deficiencies with treatment recommendations.
+                {isAgronomist
+                  ? "Review submitted crop diagnostics from farmers."
+                  : "Upload a photo of your crop and let our AI detect potential diseases, pests, and nutrient deficiencies with treatment recommendations."}
               </p>
             </div>
           </div>
         </section>
 
-        {/* Diagnostics Tool */}
-        <section className="py-12 md:py-20">
-          <div className="container">
-            <div className="mx-auto max-w-3xl">
-              {/* Step 1: Select Crop */}
-              <div className="mb-8">
-                <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-semibold">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                    1
-                  </span>
-                  Select Your Crop
-                </h2>
-                <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                  {crops.map((crop) => (
-                    <button
-                      key={crop.id}
-                      onClick={() => setSelectedCrop(crop.id)}
-                      className={cn(
-                        "flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all duration-200",
-                        selectedCrop === crop.id
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/30 hover:bg-muted"
-                      )}
-                    >
-                      <span className="text-3xl">{crop.icon}</span>
-                      <span className="text-xs font-medium">{crop.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Step 2: Upload Image */}
-              <div className="mb-8">
-                <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-semibold">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                    2
-                  </span>
-                  Upload Crop Image
-                </h2>
-                <div
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  className={cn(
-                    "flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-all duration-200",
-                    isDragActive
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/30 hover:bg-muted/50"
-                  )}
-                >
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                    <Upload className="h-8 w-8 text-primary" />
-                  </div>
-                  <p className="mt-4 text-center font-medium">
-                    Drag and drop your image here
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    or click to browse files
-                  </p>
-                  <div className="mt-6 flex gap-3">
-                    <Button variant="outline" className="gap-2">
-                      <Upload className="h-4 w-4" />
-                      Upload File
-                    </Button>
-                    <Button variant="outline" className="gap-2">
-                      <Camera className="h-4 w-4" />
-                      Take Photo
-                    </Button>
-                  </div>
-                  <p className="mt-4 text-xs text-muted-foreground">
-                    Supported formats: JPG, PNG, HEIC (max 10MB)
-                  </p>
-                </div>
-              </div>
-
-              {/* Tips */}
-              <div className="rounded-xl border border-info/20 bg-info/5 p-6">
-                <h3 className="flex items-center gap-2 font-semibold text-info">
-                  <Info className="h-5 w-5" />
-                  Tips for Best Results
-                </h3>
-                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
-                    Take close-up photos of affected leaves or plant parts
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
-                    Ensure good lighting—natural daylight works best
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" />
-                    Include both healthy and affected areas if possible
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-warning" />
-                    Avoid blurry or over-exposed images
-                  </li>
-                </ul>
+        {/* Auth gate */}
+        {!user && !authLoading && (
+          <section className="py-12">
+            <div className="container">
+              <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-8 text-center">
+                <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-4 text-muted-foreground">Please sign in to use crop diagnostics.</p>
+                <Button className="mt-4" onClick={() => window.location.href = '/auth'}>Sign In</Button>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+
+        {/* Farmer: Upload tool */}
+        {user && isFarmer && (
+          <section className="py-12 md:py-20">
+            <div className="container">
+              <div className="mx-auto max-w-3xl">
+                {/* Step 1: Select Crop */}
+                <div className="mb-8">
+                  <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-semibold">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">1</span>
+                    Select Your Crop
+                  </h2>
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                    {crops.map((crop) => (
+                      <button
+                        key={crop.id}
+                        onClick={() => setSelectedCrop(crop.id)}
+                        className={cn(
+                          "flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all duration-200",
+                          selectedCrop === crop.id
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/30 hover:bg-muted"
+                        )}
+                      >
+                        <span className="text-3xl">{crop.icon}</span>
+                        <span className="text-xs font-medium">{crop.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Step 2: Upload Image */}
+                <div className="mb-8">
+                  <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-semibold">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">2</span>
+                    Upload Crop Image
+                  </h2>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/heic"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-12 transition-all duration-200",
+                      isDragActive
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/30 hover:bg-muted/50",
+                      uploading && "pointer-events-none opacity-60"
+                    )}
+                  >
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                      <Upload className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="mt-4 text-center font-medium">
+                      {uploading ? "Uploading..." : "Drag and drop your image here"}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">or click to browse files</p>
+                    <p className="mt-4 text-xs text-muted-foreground">
+                      Supported formats: JPG, PNG, HEIC (max 10MB)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tips */}
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
+                  <h3 className="flex items-center gap-2 font-semibold text-primary">
+                    <Info className="h-5 w-5" />
+                    Tips for Best Results
+                  </h3>
+                  <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                      Take close-up photos of affected leaves or plant parts
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                      Ensure good lighting—natural daylight works best
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                      Include both healthy and affected areas if possible
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-warning" />
+                      Avoid blurry or over-exposed images
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Diagnostic History (farmer + agronomist) */}
+        {user && (isFarmer || isAgronomist) && (
+          <section className="bg-card py-16">
+            <div className="container">
+              <h2 className="mb-8 flex items-center gap-2 font-display text-2xl font-bold">
+                <History className="h-6 w-6" />
+                {isAgronomist ? "All Diagnostics" : "Your Diagnostics"}
+              </h2>
+
+              {historyLoading && (
+                <div className="py-8 text-center text-muted-foreground animate-pulse">Loading history...</div>
+              )}
+
+              {!historyLoading && history.length === 0 && (
+                <div className="py-8 text-center text-muted-foreground">No diagnostics submitted yet.</div>
+              )}
+
+              {!historyLoading && history.length > 0 && (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {history.map((record) => (
+                    <div key={record.id} className="rounded-xl border border-border bg-background p-4">
+                      {record.image_url && (
+                        <img src={record.image_url} alt="Crop" className="mb-3 h-40 w-full rounded-lg object-cover" />
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium capitalize">{record.crop_type}</span>
+                        <span className={cn(
+                          "rounded-full px-2 py-0.5 text-xs font-medium",
+                          record.status === 'completed' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                        )}>
+                          {record.status}
+                        </span>
+                      </div>
+                      {record.notes && (
+                        <p className="mt-2 text-sm text-muted-foreground">{record.notes}</p>
+                      )}
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {new Date(record.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* How It Works */}
-        <section className="bg-card py-16">
+        <section className="py-16">
           <div className="container">
             <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
               How AI Diagnostics Works
