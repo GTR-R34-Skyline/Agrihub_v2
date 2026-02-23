@@ -28,11 +28,22 @@ interface DiagnosticRecord {
   created_at: string;
 }
 
+interface DiagnosisResult {
+  disease_name: string;
+  confidence: number;
+  severity: string;
+  description: string;
+  treatment: string;
+  prevention: string;
+}
+
 const Diagnostics = () => {
   const { user, roles, isLoading: authLoading } = useAuth();
   const [selectedCrop, setSelectedCrop] = useState<string | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [diagnosisResult, setDiagnosisResult] = useState<DiagnosisResult | null>(null);
   const [history, setHistory] = useState<DiagnosticRecord[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,6 +119,7 @@ const Diagnostics = () => {
     }
 
     setUploading(true);
+    setDiagnosisResult(null);
     try {
       // Upload image
       const filePath = `${user.id}/${Date.now()}-${file.name}`;
@@ -122,25 +134,52 @@ const Diagnostics = () => {
         .getPublicUrl(filePath);
 
       // Insert diagnostic record
-      const { error: insertError } = await supabase
+      const { data: insertedRecord, error: insertError } = await supabase
         .from('crop_diagnostics')
         .insert({
           farmer_id: user.id,
           crop_type: selectedCrop,
           image_url: urlData.publicUrl,
-          status: 'pending',
-        });
+          status: 'analyzing',
+        })
+        .select('id')
+        .single();
 
       if (insertError) throw insertError;
 
-      toast.success("Diagnostic submitted! You'll receive results shortly.");
-      setSelectedCrop(null);
+      toast.success("Image uploaded! AI analysis in progress...");
+      setUploading(false);
+      setAnalyzing(true);
+
+      // Call AI analysis edge function
+      const { data: aiData, error: aiError } = await supabase.functions.invoke('analyze-crop', {
+        body: { imageUrl: urlData.publicUrl, cropType: selectedCrop },
+      });
+
+      if (aiError) throw aiError;
+
+      const diagnosis = aiData?.diagnosis;
+      if (diagnosis) {
+        setDiagnosisResult(diagnosis);
+
+        // Update the diagnostic record with results
+        await supabase
+          .from('crop_diagnostics')
+          .update({
+            diagnosis_result: diagnosis,
+            status: 'completed',
+            notes: `${diagnosis.disease_name} (${diagnosis.severity} severity, ${diagnosis.confidence}% confidence)`,
+          })
+          .eq('id', insertedRecord.id);
+      }
+
       fetchHistory();
     } catch (err: any) {
       console.error('Error submitting diagnostic:', err);
       toast.error(err.message ?? "Failed to submit diagnostic.");
     } finally {
       setUploading(false);
+      setAnalyzing(false);
     }
   };
 
@@ -281,7 +320,87 @@ const Diagnostics = () => {
           </section>
         )}
 
-        {/* Diagnostic History (farmer + agronomist) */}
+        {/* AI Analysis in Progress */}
+        {analyzing && (
+          <section className="py-8">
+            <div className="container">
+              <div className="mx-auto max-w-3xl">
+                <div className="flex flex-col items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-12 text-center">
+                  <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                  <h3 className="font-display text-xl font-semibold">AI is analyzing your crop...</h3>
+                  <p className="text-sm text-muted-foreground">This may take a few seconds</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* AI Diagnosis Results */}
+        {diagnosisResult && !analyzing && (
+          <section className="py-8">
+            <div className="container">
+              <div className="mx-auto max-w-3xl">
+                <div className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="flex items-center gap-2 font-display text-xl font-bold">
+                      <Leaf className="h-5 w-5 text-primary" />
+                      AI Diagnosis Result
+                    </h3>
+                    <span className={cn(
+                      "rounded-full px-3 py-1 text-xs font-bold uppercase",
+                      diagnosisResult.severity === 'none' && "bg-primary/10 text-primary",
+                      diagnosisResult.severity === 'low' && "bg-primary/10 text-primary",
+                      diagnosisResult.severity === 'moderate' && "bg-warning/10 text-warning",
+                      diagnosisResult.severity === 'high' && "bg-destructive/10 text-destructive",
+                      diagnosisResult.severity === 'critical' && "bg-destructive/20 text-destructive",
+                    )}>
+                      {diagnosisResult.severity} severity
+                    </span>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="text-lg font-semibold">{diagnosisResult.disease_name}</h4>
+                    <div className="mt-1 flex items-center gap-2">
+                      <div className="h-2 flex-1 rounded-full bg-muted">
+                        <div
+                          className="h-2 rounded-full bg-primary transition-all"
+                          style={{ width: `${diagnosisResult.confidence}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-muted-foreground">{diagnosisResult.confidence}% confidence</span>
+                    </div>
+                  </div>
+
+                  <p className="mb-4 text-sm text-muted-foreground">{diagnosisResult.description}</p>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-xl border border-primary/10 bg-primary/5 p-4">
+                      <h5 className="mb-2 flex items-center gap-1 font-semibold text-primary">
+                        <CheckCircle className="h-4 w-4" /> Treatment
+                      </h5>
+                      <p className="text-sm text-muted-foreground">{diagnosisResult.treatment}</p>
+                    </div>
+                    <div className="rounded-xl border border-border bg-muted/50 p-4">
+                      <h5 className="mb-2 flex items-center gap-1 font-semibold">
+                        <Info className="h-4 w-4" /> Prevention
+                      </h5>
+                      <p className="text-sm text-muted-foreground">{diagnosisResult.prevention}</p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => setDiagnosisResult(null)}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {user && (isFarmer || isAgronomist) && (
           <section className="bg-card py-16">
             <div className="container">

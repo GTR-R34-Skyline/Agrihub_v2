@@ -16,8 +16,7 @@ interface Advisor {
   total_consultations: number;
   bio: string | null;
   is_available: boolean;
-  full_name: string | null;
-  avatar_url: string | null;
+  display_name: string | null;
 }
 
 const Advisory = () => {
@@ -28,10 +27,9 @@ const Advisory = () => {
   useEffect(() => {
     const fetchAdvisors = async () => {
       try {
-        // Fetch advisors with public profile data via separate query
         const { data: advisorData, error: advisorError } = await supabase
           .from('advisors')
-          .select('id, user_id, specialization, experience_years, hourly_rate, rating, total_consultations, bio, is_available')
+          .select('id, user_id, specialization, experience_years, hourly_rate, rating, total_consultations, bio, is_available, display_name')
           .eq('is_available', true);
 
         if (advisorError) throw advisorError;
@@ -41,22 +39,9 @@ const Advisory = () => {
           return;
         }
 
-        // Fetch public profile info for these advisors
-        const userIds = advisorData.map(a => a.user_id);
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, avatar_url')
-          .in('user_id', userIds);
+        setAdvisors(advisorData as Advisor[]);
 
-        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) ?? []);
-
-        const merged: Advisor[] = advisorData.map(a => ({
-          ...a,
-          full_name: profileMap.get(a.user_id)?.full_name ?? null,
-          avatar_url: profileMap.get(a.user_id)?.avatar_url ?? null,
-        }));
-
-        setAdvisors(merged);
+        
       } catch (err: any) {
         console.error('Error fetching advisors:', err);
         setError(err.message ?? 'Failed to load advisors');
@@ -132,17 +117,13 @@ const Advisory = () => {
                     <div className="flex gap-4">
                       {/* Avatar */}
                       <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 text-4xl">
-                        {advisor.avatar_url ? (
-                          <img src={advisor.avatar_url} alt={advisor.full_name ?? "Advisor"} className="h-full w-full rounded-xl object-cover" />
-                        ) : (
-                          "👩‍🔬"
-                        )}
+                          👩‍🔬
                       </div>
 
                       {/* Info */}
                       <div className="flex-1">
                         <h3 className="font-display text-xl font-semibold">
-                          {advisor.full_name ?? "Unnamed Advisor"}
+                          {advisor.display_name ?? "Unnamed Advisor"}
                         </h3>
                         <div className="mt-1 flex flex-wrap gap-2">
                           {advisor.specialization.map((spec) => (
