@@ -169,11 +169,30 @@ const Advisory = () => {
                         <span className="text-sm text-muted-foreground">/hour</span>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            if (!user) { toast.error("Please sign in to book a consultation."); return; }
+                            if (!isFarmer) { toast.error("Only farmers can book consultations."); return; }
+                            setBookingAdvisor(advisor);
+                            setBookingOpen(true);
+                          }}
+                        >
                           <Calendar className="h-4 w-4" />
                           Schedule
                         </Button>
-                        <Button size="sm" className="gap-2">
+                        <Button
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            if (!user) { toast.error("Please sign in to book a consultation."); return; }
+                            if (!isFarmer) { toast.error("Only farmers can book consultations."); return; }
+                            setBookingAdvisor(advisor);
+                            setBookingOpen(true);
+                          }}
+                        >
                           <Clock className="h-4 w-4" />
                           Book Now
                         </Button>
