@@ -59,7 +59,7 @@ export const BookingDialog = ({ advisor, open, onOpenChange }: BookingDialogProp
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("consultations").insert({
+      const { error } = await (supabase.from("consultations" as any) as any).insert({
         farmer_id: user.id,
         advisor_id: advisor.id,
         scheduled_date: date,
