@@ -5,6 +5,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { BookingDialog } from "@/components/advisory/BookingDialog";
+import { toast } from "sonner";
 
 interface Advisor {
   id: string;
@@ -20,9 +23,14 @@ interface Advisor {
 }
 
 const Advisory = () => {
+  const { user, roles } = useAuth();
   const [advisors, setAdvisors] = useState<Advisor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bookingAdvisor, setBookingAdvisor] = useState<Advisor | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
+
+  const isFarmer = roles.includes('farmer');
 
   useEffect(() => {
     const fetchAdvisors = async () => {
@@ -161,11 +169,30 @@ const Advisory = () => {
                         <span className="text-sm text-muted-foreground">/hour</span>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            if (!user) { toast.error("Please sign in to book a consultation."); return; }
+                            if (!isFarmer) { toast.error("Only farmers can book consultations."); return; }
+                            setBookingAdvisor(advisor);
+                            setBookingOpen(true);
+                          }}
+                        >
                           <Calendar className="h-4 w-4" />
                           Schedule
                         </Button>
-                        <Button size="sm" className="gap-2">
+                        <Button
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            if (!user) { toast.error("Please sign in to book a consultation."); return; }
+                            if (!isFarmer) { toast.error("Only farmers can book consultations."); return; }
+                            setBookingAdvisor(advisor);
+                            setBookingOpen(true);
+                          }}
+                        >
                           <Clock className="h-4 w-4" />
                           Book Now
                         </Button>
@@ -207,6 +234,11 @@ const Advisory = () => {
         </section>
       </main>
       <Footer />
+      <BookingDialog
+        advisor={bookingAdvisor}
+        open={bookingOpen}
+        onOpenChange={setBookingOpen}
+      />
     </div>
   );
 };
