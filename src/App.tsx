@@ -21,6 +21,7 @@ import Auth from "./pages/Auth";
 import Account from "./pages/Account";
 import FarmerDashboard from "./pages/FarmerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdvisorDashboard from "./pages/AdvisorDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
