@@ -234,6 +234,11 @@ const Advisory = () => {
         </section>
       </main>
       <Footer />
+      <BookingDialog
+        advisor={bookingAdvisor}
+        open={bookingOpen}
+        onOpenChange={setBookingOpen}
+      />
     </div>
   );
 };
