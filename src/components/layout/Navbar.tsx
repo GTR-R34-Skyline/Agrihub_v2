@@ -149,6 +149,12 @@ export function Navbar() {
           <LanguageToggle />
           <NotificationsDropdown />
           
+          {user && (
+            <Button variant="ghost" size="icon" onClick={() => setChatOpen(true)}>
+              <MessageCircle className="h-5 w-5" />
+            </Button>
+          )}
+
           <Link to="/cart">
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
