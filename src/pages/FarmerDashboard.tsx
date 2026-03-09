@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { MyConsultations } from "@/components/dashboard/MyConsultations";
 import { motion } from "framer-motion";
 import { 
   Package, 
