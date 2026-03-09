@@ -49,7 +49,7 @@ export const MyConsultations = ({ userId }: MyConsultationsProps) => {
 
       // Fetch advisor names for display
       if (data && data.length > 0) {
-        const advisorIds = [...new Set(data.map((c: any) => c.advisor_id))];
+        const advisorIds = [...new Set(data.map((c: any) => c.advisor_id))] as string[];
         const { data: advisors } = await supabase
           .from("advisors")
           .select("id, display_name")
