@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Leaf, ShoppingCart, User, LogOut, Loader2, Bell } from "lucide-react";
+import { Menu, X, Leaf, ShoppingCart, User, LogOut, Loader2, Bell, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NAV_LINKS, APP_NAME } from "@/lib/constants";
