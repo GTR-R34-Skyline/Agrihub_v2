@@ -23,9 +23,14 @@ interface Advisor {
 }
 
 const Advisory = () => {
+  const { user, roles } = useAuth();
   const [advisors, setAdvisors] = useState<Advisor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bookingAdvisor, setBookingAdvisor] = useState<Advisor | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
+
+  const isFarmer = roles.includes('farmer');
 
   useEffect(() => {
     const fetchAdvisors = async () => {
