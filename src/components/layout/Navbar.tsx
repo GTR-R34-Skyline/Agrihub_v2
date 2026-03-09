@@ -20,6 +20,7 @@ import {
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
   const location = useLocation();
