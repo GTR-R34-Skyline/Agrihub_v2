@@ -691,6 +691,12 @@ const FarmerDashboard = () => {
                   </div>
                 )}
               </div>
+
+              {/* Weather Widget */}
+              <WeatherWidget />
+
+              {/* Crop Calendar */}
+              <CropCalendar />
             </div>
           </div>
 

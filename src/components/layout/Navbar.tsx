@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { NotificationsDropdown } from "@/components/layout/NotificationsDropdown";
+import { ChatDrawer } from "@/components/shared/ChatDrawer";
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -150,14 +150,14 @@ const Account = () => {
             <aside className="lg:col-span-1">
               <div className="rounded-2xl border border-border bg-card p-6">
                 {/* Profile Summary */}
-                <div className="mb-6 text-center">
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-4xl overflow-hidden">
-                    {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                      primaryRole === 'Farmer' ? '👨‍🌾' : primaryRole === 'Admin' ? '🛡️' : '👤'
-                    )}
-                  </div>
+                <div className="mb-6 text-center flex flex-col items-center">
+                  <AvatarUpload
+                    currentUrl={profile?.avatar_url}
+                    onUploaded={(url) => {
+                      // Profile will be refreshed via AuthContext
+                      toast.success("Avatar updated!");
+                    }}
+                  />
                   <h2 className="mt-4 font-display text-xl font-semibold">
                     {profile?.full_name || 'User'}
                   </h2>

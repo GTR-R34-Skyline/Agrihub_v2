@@ -206,6 +206,13 @@ const Advisory = () => {
           </div>
         </section>
 
+        {/* Crop Calendar */}
+        <section className="py-12 md:py-16">
+          <div className="container max-w-5xl">
+            <CropCalendar />
+          </div>
+        </section>
+
         {/* How It Works */}
         <section className="bg-card py-16">
           <div className="container">

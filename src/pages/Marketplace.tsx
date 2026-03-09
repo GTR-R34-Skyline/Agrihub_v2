@@ -135,6 +135,7 @@ const Marketplace = () => {
   return (
     <div className="flex min-h-screen flex-col theme-alluvial bg-background bg-alluvial-gradient">
       <Navbar />
+      <MarketPriceTicker />
       <main className="flex-1">
         {/* Header */}
         <section className="border-b border-border bg-card py-12">
