@@ -22,6 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fetchPublicProfiles, type PublicProfile } from "@/lib/supabase-helpers";
+import { MarketPriceTicker } from "@/components/shared/MarketPriceTicker";
 import type { Database } from "@/integrations/supabase/types";
 
 // Minimal product type for marketplace display (RLS-compliant select)
