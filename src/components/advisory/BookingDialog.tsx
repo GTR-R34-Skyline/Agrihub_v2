@@ -72,6 +72,23 @@ export const BookingDialog = ({ advisor, open, onOpenChange }: BookingDialogProp
 
       if (error) throw error;
 
+      // Send in-app notification to the advisor
+      // Look up the advisor's user_id for the notification
+      const { data: advisorData } = await supabase
+        .from("advisors")
+        .select("user_id")
+        .eq("id", advisor.id)
+        .single();
+
+      if (advisorData?.user_id) {
+        await supabase.from("notifications").insert({
+          user_id: advisorData.user_id,
+          type: "consultation_booked",
+          title: "New Consultation Booking",
+          message: `A farmer booked a consultation on ${date} at ${time} — Topic: ${topic.trim()}`,
+        });
+      }
+
       toast.success("Consultation booked successfully! The advisor will confirm shortly.");
       onOpenChange(false);
       setDate("");

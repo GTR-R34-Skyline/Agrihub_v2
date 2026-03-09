@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { MyConsultations } from "@/components/dashboard/MyConsultations";
 import { motion } from "framer-motion";
 import { 
   Package, 
@@ -633,9 +634,12 @@ const FarmerDashboard = () => {
                   </div>
                 )}
               </div>
-            </div>
+              </div>
 
-            {/* Sidebar */}
+              {/* My Consultations */}
+              {user && (
+                <MyConsultations userId={user.id} />
+              )}
             <div className="space-y-6">
               {/* Recent Orders */}
               <div className="rounded-2xl bg-laterite-surface border border-border/20 p-6 shadow-lg">
