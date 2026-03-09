@@ -5,6 +5,9 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { BookingDialog } from "@/components/advisory/BookingDialog";
+import { toast } from "sonner";
 
 interface Advisor {
   id: string;
