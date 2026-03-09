@@ -93,6 +93,14 @@ const AppContent = () => {
             </RoleProtectedRoute>
           } 
         />
+        <Route 
+          path="/advisor-dashboard" 
+          element={
+            <RoleProtectedRoute allowedRoles={["agronomist", "admin"]}>
+              <AdvisorDashboard />
+            </RoleProtectedRoute>
+          } 
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
