@@ -326,5 +326,7 @@ export function Navbar() {
         )}
       </AnimatePresence>
     </header>
+    {user && <ChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />}
+    </>
   );
 }
