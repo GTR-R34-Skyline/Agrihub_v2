@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { AvatarUpload } from "@/components/shared/AvatarUpload";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
