@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BookingDialog } from "@/components/advisory/BookingDialog";
+import { CropCalendar } from "@/components/shared/CropCalendar";
 import { toast } from "sonner";
 
 interface Advisor {
@@ -202,6 +203,13 @@ const Advisory = () => {
                 ))}
               </div>
             )}
+          </div>
+        </section>
+
+        {/* Crop Calendar */}
+        <section className="py-12 md:py-16">
+          <div className="container max-w-5xl">
+            <CropCalendar />
           </div>
         </section>
 

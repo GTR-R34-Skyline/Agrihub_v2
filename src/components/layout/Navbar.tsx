@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Leaf, ShoppingCart, User, LogOut, Loader2, Bell } from "lucide-react";
+import { Menu, X, Leaf, ShoppingCart, User, LogOut, Loader2, Bell, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NAV_LINKS, APP_NAME } from "@/lib/constants";
@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageToggle } from "@/components/ui/language-toggle";
 import { NotificationsDropdown } from "@/components/layout/NotificationsDropdown";
+import { ChatDrawer } from "@/components/shared/ChatDrawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,7 @@ import {
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
   const location = useLocation();
@@ -103,6 +105,7 @@ export function Navbar() {
   }, [user]);
 
   return (
+    <>
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
@@ -147,6 +150,12 @@ export function Navbar() {
           <LanguageToggle />
           <NotificationsDropdown />
           
+          {user && (
+            <Button variant="ghost" size="icon" onClick={() => setChatOpen(true)}>
+              <MessageCircle className="h-5 w-5" />
+            </Button>
+          )}
+
           <Link to="/cart">
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
@@ -318,5 +327,7 @@ export function Navbar() {
         )}
       </AnimatePresence>
     </header>
+    {user && <ChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />}
+    </>
   );
 }

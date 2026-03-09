@@ -22,6 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fetchPublicProfiles, type PublicProfile } from "@/lib/supabase-helpers";
+import { MarketPriceTicker } from "@/components/shared/MarketPriceTicker";
 import type { Database } from "@/integrations/supabase/types";
 
 // Minimal product type for marketplace display (RLS-compliant select)
@@ -134,6 +135,7 @@ const Marketplace = () => {
   return (
     <div className="flex min-h-screen flex-col theme-alluvial bg-background bg-alluvial-gradient">
       <Navbar />
+      <MarketPriceTicker />
       <main className="flex-1">
         {/* Header */}
         <section className="border-b border-border bg-card py-12">

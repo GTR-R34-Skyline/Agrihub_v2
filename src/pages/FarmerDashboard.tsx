@@ -33,6 +33,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardCardSkeleton } from "@/components/ui/dashboard-skeletons";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { WeatherWidget } from "@/components/shared/WeatherWidget";
+import { CropCalendar } from "@/components/shared/CropCalendar";
 import type { Database } from "@/integrations/supabase/types";
 
 // Minimal types for RLS-compliant queries
@@ -689,6 +691,12 @@ const FarmerDashboard = () => {
                   </div>
                 )}
               </div>
+
+              {/* Weather Widget */}
+              <WeatherWidget />
+
+              {/* Crop Calendar */}
+              <CropCalendar />
             </div>
           </div>
 
